@@ -1,36 +1,119 @@
 const express = require('express');
 const res = require('express/lib/response');
+const usuarioModel = require('../../models/usuario/usuario.model');
 const app = express.Router();
+const UsuarioModel = require('../../models/usuario/usuario.model');
+const bcrypt = require('bcrypt');
 
-app.get('/obtenerUsuario', (req,res) => {
-    const _idUsuario = Number(req.query._idUsuario);
-    if (!_idUsuario) {
-        return res.status(400).json({
-            ok: false,
-            msg: 'No se recibio un identificador de usuario',
-            cont: {
-                _idUsuario
-            }
-        })
-    }
-    const obtenerUsuario = arrJsnUsuarios.find(usuario => usuario._id == _idUsuario);
-    if (!obtenerUsuario) {
-        return res.status(400).json({
-            ok: false,
-            msg: `El usuario con el id: ${_idUsuario} , no se encuentra registrado en la base de datos`,
-            cont: {
-                _idUsuario
-            }
-        })
-    }
-    return res.status(200).json({
-        ok: true,
-        msg: 'Estoy en el segundo get',
+app.get('/', async (req,res) => {
+    const obtenerUsuario = await UsuarioModel.find({strContrasena:0});
+    if (obtenerUsuario.length < 1) {
+      return res.status(400).json({  
+        ok: true,  
+        msg: 'No se encontraron usuarios',
         cont: {
-            _idUsuario
+            obtenerUsuario
+        }     
+    })
+}
+    return res.status(200).json({
+        ok: false,
+        msg: 'Se encontraror usuarios',
+        count: obtenerUsuario.length,
+        cont: {
+            obtenerUsuario
         }
     })
 })
+
+app.post('/', async (req,res) => {
+    const body = {...req.body, strContrasena: req.body.strContrasena ? bcrypt.hashSync(req.body.strContrasena, 10) : undefined};
+    const bodyUsuario = new UsuarioModel(body);
+    
+    
+    const encontroEmail = await UsuarioModel.find({strEmail:body.strEmail});
+    const encontroNombreUsuario = await UsuarioModel.find({strNombreUsuario:body.strNombreUsuario});
+
+    if (encontroEmail.length>0) {
+        return res.status(400).json({
+            ok: false,
+            msg: 'El strEmail ya se encuentra registrado',
+            cont: {
+                body 
+            }
+        })
+        if (encontroNombreUsuario.length>0) {
+            return res.status(400).json({
+            ok: false,
+            msg: 'El strEmail ya se encuentra registrado',
+            cont: {
+                body 
+            }
+        })
+    }
+}
+    const err = bodyUsuario.validateSync();
+    if (err) {
+        return res.status(400).json({
+            ok: false,
+            msg: 'No se envio alguno de los campos requeridos',
+            cont: {
+                err
+            }
+        }) 
+    }
+    const usuarioRegistrado = await bodyUsuario.save();
+    return res.status(200).json({
+        ok: true,
+        msg: 'El usuario se registro correctamente',
+        cont: {
+            usuarioRegistrado
+        }
+    })
+ })
+
+module.exports = app;
+
+
+
+
+// app.get('/obtenerUsuario', (req,res) => {
+//     const _idUsuario = Number(req.query._idUsuario);
+//     if (!_idUsuario) {
+//         return res.status(400).json({
+//             ok: false,
+//             msg: 'No se recibio un identificador de usuario',
+//             cont: {
+//                 _idUsuario
+//             }
+//         })
+//     }
+//     const obtenerUsuario = arrJsnUsuarios.find(usuario => usuario._id == _idUsuario);
+//     if (!obtenerUsuario) {
+//         return res.status(400).json({
+//             ok: false,
+//             msg: `El usuario con el id: ${_idUsuario} , no se encuentra registrado en la base de datos`,
+//             cont: {
+//                 _idUsuario
+//             }
+//         })
+//     }
+// return res.status(200).json({
+//     ok: true,
+//     msg: 'Se recibio el usuario de manera exitosa',
+//     cont: {
+//         obtenerUsuario
+//     }
+// })
+
+//     return res.status(200).json({
+//         ok: true,
+//         msg: 'Estoy en el segundo get',
+//         cont: {
+//             _idUsuario
+//         }
+//     })
+// })
 //let arrJsnUsuarios = [{ _id:}]
 // const path = require('path');
 // const rutaDescarga = path.resolve(__dirname, '../../assets/index.html')
