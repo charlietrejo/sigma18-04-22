@@ -117,7 +117,8 @@ app.put('/', async (req, res) => {
 })
 
 app.delete('/', async (req,res) => {
-    const blnEstado = req.body.blnEstado == "salse ? false : true"
+    try {
+        const blnEstado = req.body.blnEstado == "false" ? false : true
     const _idUsuario = req.query._idUsuario
     if (!_idUsuario || _idUsuario != 24) {
         return res.status(400).json({
@@ -128,14 +129,24 @@ app.delete('/', async (req,res) => {
             }
         })
     }
+    const modificarEstadoUsuario = await UsuarioModel.findOneAndUpdate({_id: _idUsuario},{$set:{blnEstado:blnEstado }},{new:true})
+
     return res.status(200).json({
         ok: true,
-        msg: 'Se recibieron los valores de manera exitosa',
+        msg: blnEstado == true ? 'Se activo el usuario de manera existosa' : 'Se desactivo el usuario de manera exitosa',
         cont: {
-            _idUsuario: _idUsuario,
-            blnEstado: blnEstado
+            modificarEstadoUsuario
         }
     })
+    } catch (error) {
+        return res.status(500).json({
+            ok: false,
+            msg: 'Error del servidor',
+            cont: {
+                error
+            }
+        })
+    }
 })
 
 module.exports = app;
