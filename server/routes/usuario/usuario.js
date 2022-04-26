@@ -1,9 +1,9 @@
 const express = require('express');
 const res = require('express/lib/response');
-const usuarioModel = require('../../models/usuario/usuario.model');
 const app = express.Router();
 const UsuarioModel = require('../../models/usuario/usuario.model');
 const bcrypt = require('bcrypt');
+const ProductoModel = require('../../models/producto/producto.model');
 
 app.get('/', async (req,res) => {
     const obtenerUsuario = await UsuarioModel.find({strContrasena:0});
@@ -31,8 +31,8 @@ app.post('/', async (req,res) => {
     const bodyUsuario = new UsuarioModel(body);
     
     
-    const encontroEmail = await UsuarioModel.find({strEmail:body.strEmail});
-    const encontroNombreUsuario = await UsuarioModel.find({strNombreUsuario:body.strNombreUsuario});
+    const encontroEmail = await UsuarioModel.findOne({strEmail:body.strEmail});
+    const encontroNombreUsuario = await UsuarioModel.findOne({strNombreUsuario:body.strNombreUsuario});
 
     if (encontroEmail.length>0) {
         return res.status(400).json({
@@ -70,7 +70,73 @@ app.post('/', async (req,res) => {
             usuarioRegistrado
         }
     })
- })
+})
+
+app.put('/', async (req, res) => {
+    try {
+        const _idUsuario = req.query._idUsuario;
+        if (!_idUsuario || _idUsuario.length != 24) {
+            return res.status(400).json({
+                ok: false,
+                msg: _idUsuario ? 'El identificador no es valido' : 'No se recibio el identificador del usuario',
+                cont: {
+                    _idUsuario
+                }
+            })
+        }
+        const encontroUsuario = await usuarioModel.findOne({_idUsuario})
+        if (!encontroUsuario) {
+            return res.status(400).json({
+                ok: false,
+                msg: 'No se encontro el usuario en la base de datos',
+                cont: {
+                    _idUsuario
+                }
+            })
+        }
+        const usuarioActualizado = await usuarioModel.findByIdAndUpdate(_idUsuario, {$set:{strNombre: req.body.strNombre, strApellido: req.body.strApellido, strDireccion: req.body.strDireccion } }, {new:true})
+        //console.log(encontroUsuario);
+        return res.status(200).json({
+            ok: true,
+            msg: 'Se actualizo el usuario correctamente',
+            cont: {
+                usuarioAnterior: encontroUsuario,
+                usuarioActual: usuarioActualizado
+            }
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            ok: false,
+            msg: 'Error del servidor',
+            cont: {
+                error
+            }
+        })
+    }
+})
+
+app.delete('/', async (req,res) => {
+    const blnEstado = req.body.blnEstado == "salse ? false : true"
+    const _idUsuario = req.query._idUsuario
+    if (!_idUsuario || _idUsuario != 24) {
+        return res.status(400).json({
+            ok: false,
+            msg: _idUsuario ? 'No es un id valido' : 'No se ingreso un id de usuario',
+            cont: {
+                _idUsuario: _idUsuario
+            }
+        })
+    }
+    return res.status(200).json({
+        ok: true,
+        msg: 'Se recibieron los valores de manera exitosa',
+        cont: {
+            _idUsuario: _idUsuario,
+            blnEstado: blnEstado
+        }
+    })
+})
 
 module.exports = app;
 

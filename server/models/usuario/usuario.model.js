@@ -9,8 +9,8 @@ let SchemaUsuario = mongoose.Schema({
         type:String,
         required:[true, 'No se recibio el strApellido, favor de ingresarlo']
     },
-    nmbNomina:{
-        type:Number,
+    strContrasena:{
+        type:String,
         required:[true, 'No se recibio el nmbNomina, favor de ingresarlo']
     },
     strEmail:{
@@ -18,6 +18,10 @@ let SchemaUsuario = mongoose.Schema({
         required:[true, 'No se recicbio el strEmail, favor de ingresarlo']
     },
     strNombreUsuario:{
+        type:String,
+        required:[true, 'No se recicbio el strNombreUsuario, favor de ingresarlo']
+    },
+    strDireccion:{
         type:String,
         required:[true, 'No se recicbio el strNombreUsuario, favor de ingresarlo']
     }
